@@ -38,14 +38,24 @@
       top: 20px;
       right: 20px;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(4, 1fr);
+    .container {
+      display: flex;
+      height: calc(100vh - 80px); /* height minus title */
       gap: 10px;
       padding: 10px;
-      height: calc(100vh - 80px);
       box-sizing: border-box;
+    }
+    .left-panel {
+      flex: 2; /* bigger */
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .right-panel {
+      flex: 1; /* smaller */
+      display: grid;
+      grid-template-rows: repeat(4, 1fr);
+      gap: 10px;
     }
     .widget {
       background-color: var(--widget-bg);
@@ -87,6 +97,17 @@
       margin-top: 15px;
       color: var(--text-color);
     }
+    .spotify-small {
+      height: 120px; /* smaller height */
+    }
+    .audio-widget {
+      padding: 10px;
+      text-align: center;
+      color: var(--text-color);
+    }
+    .audio-widget audio {
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -97,82 +118,81 @@
     </label>
   </div>
   <h1>BRIDGE HUB</h1>
-  <div class="grid">
-    <!-- Weather (Windy for Chicago) -->
-    <div class="widget">
-      <iframe
-        src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&detailLat=41.8781&detailLon=-87.6298&width=100%&height=100%&zoom=10"
-        allowfullscreen
-      ></iframe>
-    </div>
-
-    <!-- Marine Traffic (Chicago) -->
-    <div class="widget">
-      <iframe
-        src="https://www.marinetraffic.com/en/ais/embed/zoom:10/centery:41.8781/centerx:-87.6298/maptype:1"
-        allowfullscreen
-      ></iframe>
-    </div>
-
-    <!-- Radar (Chicago) -->
-    <div class="widget">
-      <iframe
-        src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&detailLat=41.8781&detailLon=-87.6298&width=100%&height=100%&zoom=7&radar=1"
-        allowfullscreen
-      ></iframe>
-    </div>
-
-    <!-- Moon Phase -->
-    <div class="widget">
-      <div style="display: flex; justify-content: center; align-items: center; height: 100%; padding: 10px;">
+  <div class="container">
+    <div class="left-panel">
+      <!-- Marine Traffic panel (large) -->
+      <div class="widget">
         <iframe
-          width="180"
-          height="180"
-          style="border:none; background: transparent;"
-          src="https://dimden.dev/moon?custom=1&textColor=%23FF0000"
+          src="https://www.marinetraffic.com/en/ais/embed/zoom:10/centery:41.8781/centerx:-87.6298/showmenu:false/shownames:false/maptype:1"
+          allowfullscreen
         ></iframe>
       </div>
     </div>
-
-    <!-- Timer -->
-    <div class="widget">
-      <div class="timer-content">
-        <h2>Timer</h2>
-        <label>Minutes: <input type="number" id="minutes" value="1" min="0" /></label>
-        <label>Seconds: <input type="number" id="seconds" value="0" min="0" /></label>
-        <br />
-        <button onclick="startTimer()">Start</button>
-        <h3 id="countdown">00:00</h3>
-        <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
+    <div class="right-panel">
+      <!-- Weather (Windy Chicago) -->
+      <div class="widget">
+        <iframe
+          src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&detailLat=41.8781&detailLon=-87.6298&width=100%&height=100%&zoom=10"
+          allowfullscreen
+        ></iframe>
       </div>
-    </div>
 
-    <!-- Scanner or Audio Feed (placeholder) -->
-    <div class="widget">
-      <div style="padding:10px; text-align:center; color: var(--text-color);">
-        <h2>Scanner / Public Feed</h2>
-        <!-- Example embed: Replace this with actual working stream / embed code -->
+      <!-- Radar (Chicago) using Windy embed with radar if supported -->
+      <div class="widget">
+        <iframe
+          src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&detailLat=41.8781&detailLon=-87.6298&width=100%&height=100%&zoom=7&radar=1"
+          allowfullscreen
+        ></iframe>
+      </div>
+
+      <!-- Moon Phase -->
+      <div class="widget">
+        <div style="display: flex; justify-content: center; align-items: center; height: 100%; padding: 10px;">
+          <iframe
+            width="180"
+            height="180"
+            style="border:none; background: transparent;"
+            src="https://dimden.dev/moon?custom=1&textColor=%23FF0000"
+          ></iframe>
+        </div>
+      </div>
+
+      <!-- NOAA Weather Radio Audio for Chicago (KWO39) -->
+      <div class="widget audio-widget">
+        <h2>NOAA Weather Radio KWO39 (Chicago)</h2>
         <audio controls>
-          <source src="YOUR_STREAM_URL_HERE.mp3" type="audio/mpeg" />
-          Your browser does not support the audio element.
+          <source src="https://zeno.fm/stream/chicago-area-noaa-weather-radio-kwo39-162-55mhz.m3u8" type="audio/mpeg" />
+          Your browser does not support audio streaming.
         </audio>
-        <p>(Insert legal public scanner stream URL that allows embedding.)</p>
       </div>
-    </div>
 
-    <!-- Spotify Player -->
-    <div class="widget">
-      <iframe
-        style="border-radius:12px; flex-grow:1;"
-        src="https://open.spotify.com/embed/playlist/37i9dQZF1DX4dyzvuaRJ0n?utm_source=generator"
-        width="100%"
-        height="100%"
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        loading="lazy"
-      ></iframe>
-    </div>
+      <!-- Timer -->
+      <div class="widget">
+        <div class="timer-content">
+          <h2>Timer</h2>
+          <label>Minutes: <input type="number" id="minutes" value="1" min="0" /></label>
+          <label>Seconds: <input type="number" id="seconds" value="0" min="0" /></label>
+          <br />
+          <button onclick="startTimer()">Start</button>
+          <h3 id="countdown">00:00</h3>
+          <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
+        </div>
+      </div>
 
-  </div>
+      <!-- Spotify small -->
+      <div class="widget spotify-small">
+        <iframe
+          style="border-radius:12px;"
+          src="https://open.spotify.com/embed/playlist/37i9dQZF1DX4dyzvuaRJ0n?utm_source=generator"
+          width="100%"
+          height="100%"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+        ></iframe>
+      </div>
+
+    </div> <!-- right-panel -->
+  </div> <!-- container -->
 
   <script>
     // Night / Light mode toggle
@@ -210,5 +230,6 @@
       }, 1000);
     }
   </script>
+
 </body>
 </html>
