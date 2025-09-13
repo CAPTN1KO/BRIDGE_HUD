@@ -1,92 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BRIDGE HUD</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BRIDGE HUB</title>
   <style>
+    :root {
+      --bg-color: #000000;
+      --text-color: #FF0000;
+      --widget-bg: #111111;
+      --widget-border: #FF0000;
+    }
+    .light {
+      --bg-color: #FFFFFF;
+      --text-color: #000000;
+      --widget-bg: #EEEEEE;
+      --widget-border: #000000;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
       margin: 0;
-      padding: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: Arial, sans-serif;
     }
-
+    h1 {
+      text-align: center;
+      font-family: Helvetica, sans-serif;
+      color: var(--text-color);
+      padding: 20px;
+      margin: 0;
+      font-size: 36px;
+      border-bottom: 1px solid var(--text-color);
+    }
+    .toggle-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 10px;
+      padding: 10px;
+      height: calc(100vh - 80px);
+      box-sizing: border-box;
+    }
     .widget {
-      background: white;
+      background-color: var(--widget-bg);
+      border: 1px solid var(--widget-border);
       border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 10px;
-      width: 48%;
-      min-height: 300px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
-
     iframe {
       width: 100%;
       height: 100%;
       border: none;
+      flex-grow: 1;
     }
-
-    .timer-widget {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    .timer-content {
+      padding: 20px;
+      text-align: center;
     }
-
     input[type="number"] {
       width: 60px;
       font-size: 16px;
       margin: 5px;
+      background-color: var(--widget-bg);
+      color: var(--text-color);
+      border: 1px solid var(--widget-border);
     }
-
     button {
-      padding: 5px 15px;
+      background-color: var(--text-color);
+      color: var(--bg-color);
+      border: none;
+      padding: 10px 20px;
       margin-top: 10px;
-      font-size: 16px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #countdown {
+      font-size: 24px;
+      margin-top: 15px;
+      color: var(--text-color);
     }
   </style>
 </head>
 <body>
-
-  <!-- Weather Widget -->
-  <div class="widget">
-    <h3>Local Weather (Windy)</h3>
-    <iframe src="https://embed.windy.com/embed2.html?lat=38.72&lon=-9.14&detailLat=38.72&detailLon=-9.14&width=100%&height=300&zoom=10" allowfullscreen></iframe>
+  <div class="toggle-container">
+    <label style="color: var(--text-color);">
+      Night Mode:
+      <input type="checkbox" id="modeToggle" checked />
+    </label>
   </div>
-
-  <!-- Marine Traffic -->
-  <div class="widget">
-    <h3>Marine Traffic</h3>
-    <iframe src="https://www.marinetraffic.com/en/ais/embed/zoom:10/centery:38.72/centerx:-9.14/maptype:1" allowfullscreen></iframe>
-  </div>
-
-  <!-- Timer Widget -->
-  <div class="widget timer-widget">
-    <h3>Custom Timer</h3>
-    <div>
-      <label>Minutes: <input type="number" id="minutes" value="1" min="0"></label>
-      <label>Seconds: <input type="number" id="seconds" value="0" min="0"></label>
+  <h1>BRIDGE HUB</h1>
+  <div class="grid">
+    <!-- Weather (Windy for Chicago) -->
+    <div class="widget">
+      <iframe
+        src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&detailLat=41.8781&detailLon=-87.6298&width=100%&height=100%&zoom=10"
+        allowfullscreen
+      ></iframe>
     </div>
-    <button onclick="startTimer()">Start Timer</button>
-    <h2 id="countdown">00:00</h2>
-    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
-  </div>
 
-  <!-- Spotify Player -->
-  <div class="widget">
-    <h3>Spotify Player</h3>
-    <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/37i9dQZF1DX4dyzvuaRJ0n" width="100%" height="300" allow="encrypted-media"></iframe>
+    <!-- Marine Traffic (Chicago) -->
+    <div class="widget">
+      <iframe
+        src="https://www.marinetraffic.com/en/ais/embed/zoom:10/centery:41.8781/centerx:-87.6298/maptype:1"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <!-- Radar (Chicago) -->
+    <div class="widget">
+      <iframe
+        src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&detailLat=41.8781&detailLon=-87.6298&width=100%&height=100%&zoom=7&radar=1"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <!-- Moon Phase -->
+    <div class="widget">
+      <div style="display: flex; justify-content: center; align-items: center; height: 100%; padding: 10px;">
+        <iframe
+          width="180"
+          height="180"
+          style="border:none; background: transparent;"
+          src="https://dimden.dev/moon?custom=1&textColor=%23FF0000"
+        ></iframe>
+      </div>
+    </div>
+
+    <!-- Timer -->
+    <div class="widget">
+      <div class="timer-content">
+        <h2>Timer</h2>
+        <label>Minutes: <input type="number" id="minutes" value="1" min="0" /></label>
+        <label>Seconds: <input type="number" id="seconds" value="0" min="0" /></label>
+        <br />
+        <button onclick="startTimer()">Start</button>
+        <h3 id="countdown">00:00</h3>
+        <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
+      </div>
+    </div>
+
+    <!-- Scanner or Audio Feed (placeholder) -->
+    <div class="widget">
+      <div style="padding:10px; text-align:center; color: var(--text-color);">
+        <h2>Scanner / Public Feed</h2>
+        <!-- Example embed: Replace this with actual working stream / embed code -->
+        <audio controls>
+          <source src="YOUR_STREAM_URL_HERE.mp3" type="audio/mpeg" />
+          Your browser does not support the audio element.
+        </audio>
+        <p>(Insert legal public scanner stream URL that allows embedding.)</p>
+      </div>
+    </div>
+
+    <!-- Spotify Player -->
+    <div class="widget">
+      <iframe
+        style="border-radius:12px; flex-grow:1;"
+        src="https://open.spotify.com/embed/playlist/37i9dQZF1DX4dyzvuaRJ0n?utm_source=generator"
+        width="100%"
+        height="100%"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        loading="lazy"
+      ></iframe>
+    </div>
+
   </div>
 
   <script>
+    // Night / Light mode toggle
+    const toggle = document.getElementById('modeToggle');
+    toggle.addEventListener('change', () => {
+      if (toggle.checked) {
+        document.body.classList.remove('light');
+      } else {
+        document.body.classList.add('light');
+      }
+    });
+
+    // Timer
     let timer;
     function startTimer() {
       clearInterval(timer);
-      const minutes = parseInt(document.getElementById('minutes').value);
-      const seconds = parseInt(document.getElementById('seconds').value);
+      const minutes = parseInt(document.getElementById('minutes').value) || 0;
+      const seconds = parseInt(document.getElementById('seconds').value) || 0;
       let time = minutes * 60 + seconds;
       const countdownEl = document.getElementById('countdown');
       const alarm = document.getElementById('alarm-sound');
@@ -106,6 +210,5 @@
       }, 1000);
     }
   </script>
-
 </body>
 </html>
