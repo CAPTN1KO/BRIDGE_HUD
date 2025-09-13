@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marine Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .widget {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 10px;
+      width: 48%;
+      min-height: 300px;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .timer-widget {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    input[type="number"] {
+      width: 60px;
+      font-size: 16px;
+      margin: 5px;
+    }
+
+    button {
+      padding: 5px 15px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Weather Widget -->
+  <div class="widget">
+    <h3>Local Weather (Windy)</h3>
+    <iframe src="https://embed.windy.com/embed2.html?lat=38.72&lon=-9.14&detailLat=38.72&detailLon=-9.14&width=100%&height=300&zoom=10" allowfullscreen></iframe>
+  </div>
+
+  <!-- Marine Traffic -->
+  <div class="widget">
+    <h3>Marine Traffic</h3>
+    <iframe src="https://www.marinetraffic.com/en/ais/embed/zoom:10/centery:38.72/centerx:-9.14/maptype:1" allowfullscreen></iframe>
+  </div>
+
+  <!-- Timer Widget -->
+  <div class="widget timer-widget">
+    <h3>Custom Timer</h3>
+    <div>
+      <label>Minutes: <input type="number" id="minutes" value="1" min="0"></label>
+      <label>Seconds: <input type="number" id="seconds" value="0" min="0"></label>
+    </div>
+    <button onclick="startTimer()">Start Timer</button>
+    <h2 id="countdown">00:00</h2>
+    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
+  </div>
+
+  <!-- Spotify Player -->
+  <div class="widget">
+    <h3>Spotify Player</h3>
+    <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/37i9dQZF1DX4dyzvuaRJ0n" width="100%" height="300" allow="encrypted-media"></iframe>
+  </div>
+
+  <script>
+    let timer;
+    function startTimer() {
+      clearInterval(timer);
+      const minutes = parseInt(document.getElementById('minutes').value);
+      const seconds = parseInt(document.getElementById('seconds').value);
+      let time = minutes * 60 + seconds;
+      const countdownEl = document.getElementById('countdown');
+      const alarm = document.getElementById('alarm-sound');
+
+      timer = setInterval(() => {
+        if (time <= 0) {
+          clearInterval(timer);
+          countdownEl.textContent = "00:00";
+          alarm.play();
+          return;
+        }
+
+        let m = Math.floor(time / 60);
+        let s = time % 60;
+        countdownEl.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        time--;
+      }, 1000);
+    }
+  </script>
+
+</body>
+</html>
