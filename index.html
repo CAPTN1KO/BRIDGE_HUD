@@ -338,4 +338,544 @@
       </div>
       <div class="btn-col" aria-hidden="true" style="margin-left:6px;">
         <button class="console-btn" onclick="toggleSweep()">TOGGLE SWEEP</button>
-        <butto
+        <button class="console-btn ghost" onclick="snapshot('sweep')">SNAP</button>
+      </div>
+    </div>
+
+    <!-- Moon -->
+    <div style="display:flex; gap:12px; align-items:flex-start;">
+      <div class="port-small" id="moon-port">
+        <div class="label">MOON — Chicago</div>
+        <canvas id="moonCanvas" style="width:100%; height:100%; display:block;"></canvas>
+        <div class="info" id="moonInfoBox">...</div>
+      </div>
+      <div class="btn-col" style="margin-left:6px;">
+        <button class="console-btn" onclick="renderMoon()">REFRESH</button>
+        <button class="console-btn ghost" onclick="snapshot('moon')">SNAP</button>
+      </div>
+    </div>
+
+    <!-- Extras: wind compass & depth-sounder -->
+    <div style="display:flex; gap:12px; align-items:flex-start;">
+      <div class="port-small" id="extras-port">
+        <div class="label">EXTRAS</div>
+        <canvas id="depthCanvas" class="depth-canvas"></canvas>
+        <div class="info" id="windInfo">Wind: --</div>
+      </div>
+      <div class="btn-col" style="margin-left:6px;">
+        <button class="console-btn" onclick="fetchWind()">REFRESH</button>
+        <button class="console-btn ghost" id="radioBtn" onclick="toggleRadio()">RADIO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logbook ticker -->
+  <div style="width:100%; max-width:1200px;">
+    <div class="ticker" role="status" aria-live="polite">
+      <div class="marquee" id="marquee">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>BRIDGE HUD — Retro radar cassette-futurism console • Host on GitHub Pages</footer>
+
+<script>
+/* ---------------------------
+   Utilities & configuration
+   --------------------------- */
+const chicago = {lat:41.8781, lon:-87.6298};
+const calumet = {lat:41.67, lon:-87.53};
+const openMeteoUrl = (lat, lon) => `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=America%2FChicago`;
+
+/* mode toggle */
+const modeBtn = document.getElementById('modeToggle');
+modeBtn.addEventListener('click', ()=>{
+  const root = document.documentElement;
+  const mode = document.body.getAttribute('data-mode');
+  if(mode === 'night'){
+    document.body.setAttribute('data-mode','day');
+    modeBtn.textContent = 'NIGHT';
+    modeBtn.style.background = 'var(--accent)';
+    modeBtn.style.color = '#000';
+  } else {
+    document.body.setAttribute('data-mode','night');
+    modeBtn.textContent = 'DAY';
+    modeBtn.style.background = 'var(--accent)';
+    modeBtn.style.color = '#000';
+  }
+});
+
+/* reload iframe helper */
+function reloadIframe(id){
+  const f = document.getElementById(id);
+  if(!f) return;
+  const src = f.src;
+  f.src = 'about:blank';
+  setTimeout(()=> f.src = src, 200);
+}
+
+/* open-in-tab helper - used by console button snapshots or open */
+function openInNew(id){
+  const f = document.getElementById(id);
+  if(!f) return;
+  window.open(f.src, '_blank', 'noopener');
+}
+
+/* snapshot canvas or iframe: create image from canvas or take screenshot request fallback */
+function snapshot(name){
+  if(name === 'moon'){
+    const canvas = document.getElementById('moonCanvas');
+    const data = canvas.toDataURL('image/png');
+    downloadURI(data, `moon-${Date.now()}.png`);
+  } else if(name === 'sweep'){
+    const canvas = document.getElementById('sweepCanvas');
+    const data = canvas.toDataURL('image/png');
+    downloadURI(data, `sweep-${Date.now()}.png`);
+  }
+}
+function downloadURI(uri, name){
+  const a = document.createElement('a');
+  a.download = name;
+  a.href = uri;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/* ---------------------------
+   AIS refresh buttons for Chicago & Calumet
+   --------------------------- */
+document.querySelectorAll('#port-chicago .label, #port-calumet .label').forEach(el=>{
+  // labels are placeholders
+});
+
+/* Add console buttons dynamically next to AIS circles for open/refresh */
+function makeAISControls(){
+  // chicago control area
+  const chicagoPort = document.getElementById('port-chicago');
+  const col1 = document.createElement('div');
+  col1.style.position = 'absolute';
+  col1.style.right = '-110px';
+  col1.style.top = '50%';
+  col1.style.transform = 'translateY(-50%)';
+  col1.style.display = 'flex';
+  col1.style.flexDirection = 'column';
+  col1.style.gap = '10px';
+  chicagoPort.parentElement.appendChild(col1);
+
+  const r1 = document.createElement('button');
+  r1.className = 'console-btn';
+  r1.textContent = 'REFRESH';
+  r1.onclick = ()=> reloadIframe('ais-chicago');
+  col1.appendChild(r1);
+
+  const o1 = document.createElement('button');
+  o1.className = 'console-btn ghost';
+  o1.textContent = 'OPEN';
+  o1.onclick = ()=> openInNew('ais-chicago');
+  col1.appendChild(o1);
+
+  // calumet controls
+  const calumetPort = document.getElementById('port-calumet');
+  const col2 = document.createElement('div');
+  col2.style.position = 'absolute';
+  col2.style.right = '-110px';
+  col2.style.top = '50%';
+  col2.style.transform = 'translateY(-50%)';
+  col2.style.display = 'flex';
+  col2.style.flexDirection = 'column';
+  col2.style.gap = '10px';
+  calumetPort.parentElement.appendChild(col2);
+
+  const r2 = document.createElement('button');
+  r2.className = 'console-btn';
+  r2.textContent = 'REFRESH';
+  r2.onclick = ()=> reloadIframe('ais-calumet');
+  col2.appendChild(r2);
+
+  const o2 = document.createElement('button');
+  o2.className = 'console-btn ghost';
+  o2.textContent = 'OPEN';
+  o2.onclick = ()=> openInNew('ais-calumet');
+  col2.appendChild(o2);
+}
+setTimeout(makeAISControls, 120); // after layout
+
+/* ---------------------------
+   Moon rendering on canvas (fixed & reliable)
+   --------------------------- */
+function getMoonInfoUTC(date){
+  const d = new Date(date.getTime());
+  const yy = d.getUTCFullYear();
+  let mm = d.getUTCMonth()+1;
+  const day = d.getUTCDate() + d.getUTCHours()/24 + d.getUTCMinutes()/1440 + d.getUTCSeconds()/86400;
+  if (mm < 3) { mm += 12; }
+  const a = Math.floor(yy/100);
+  const b = 2 - a + Math.floor(a/4);
+  const jd = Math.floor(365.25*(yy+4716)) + Math.floor(30.6001*(mm+1)) + day + b - 1524.5;
+  const synodic = 29.530588853;
+  const daysSince = jd - 2451549.5;
+  const newMoons = daysSince / synodic;
+  const phase = newMoons - Math.floor(newMoons);
+  const age = phase * synodic;
+  const illum = 0.5 * (1 - Math.cos(2*Math.PI*phase));
+  let name = "New Moon";
+  if(age < 1.84566) name = "New Moon";
+  else if(age < 5.53699) name = "Waxing Crescent";
+  else if(age < 9.22831) name = "First Quarter";
+  else if(age < 12.91963) name = "Waxing Gibbous";
+  else if(age < 16.61096) name = "Full Moon";
+  else if(age < 20.30228) name = "Waning Gibbous";
+  else if(age < 23.99361) name = "Last Quarter";
+  else if(age < 27.68493) name = "Waning Crescent";
+  else name = "New Moon";
+  return {phaseFraction: phase, ageDays: +age.toFixed(2), illum: + (illum*100).toFixed(1), name};
+}
+
+function renderMoon(){
+  const port = document.getElementById('moon-port');
+  const canvas = document.getElementById('moonCanvas');
+  const rect = port.getBoundingClientRect();
+  const size = Math.min(rect.width, rect.height) * devicePixelRatio;
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const now = new Date();
+  const m = getMoonInfoUTC(now);
+
+  // background
+  ctx.fillStyle = '#020303';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  const cx = canvas.width/2;
+  const cy = canvas.height/2;
+  const r = canvas.width * 0.34;
+
+  // glow ring
+  ctx.beginPath();
+  const g = ctx.createRadialGradient(cx,cy,r*0.4, cx,cy,r*1.1);
+  g.addColorStop(0, 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(255,26,26,0.03)');
+  ctx.fillStyle = g;
+  ctx.arc(cx,cy,r*1.25,0,Math.PI*2);
+  ctx.fill();
+
+  // dark base
+  ctx.beginPath();
+  ctx.fillStyle = '#0b0b0c';
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fill();
+
+  // bright disc then subtract mask
+  ctx.save();
+  ctx.beginPath();
+  ctx.fillStyle = '#ffefdb';
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fill();
+
+  // compute mask offset
+  const phase = m.phaseFraction;
+  let maskOffset;
+  if(phase <= 0.5){
+    maskOffset = r * (1 - (phase / 0.5));
+  } else {
+    maskOffset = - r * ((phase - 0.5)/0.5);
+  }
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  ctx.arc(cx + maskOffset, cy, r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+
+  // subtle craters
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  for(let i=0;i<90;i++){
+    const a = Math.random()*Math.PI*2;
+    const rr = r * (0.2 + Math.random()*0.7);
+    const x = cx + Math.cos(a)*rr;
+    const y = cy + Math.sin(a)*rr;
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    ctx.fillRect(x,y,1.2,1.2);
+  }
+  ctx.restore();
+
+  // overlay text
+  const info = document.getElementById('moonInfoBox');
+  info.textContent = `${m.name} • Age ${m.ageDays}d • ${m.illum}% illum`;
+}
+
+/* ---------------------------
+   Radar sweep animation (canvas)
+   --------------------------- */
+const sweepCanvas = document.getElementById('sweepCanvas');
+const sweepCtx = sweepCanvas.getContext('2d');
+let sweepRunning = true;
+let sweepAngle = 0;
+let sweepSpeed = 0.02; // radians per tick
+
+function resizeSweep(){
+  const rect = document.getElementById('sweep-port').getBoundingClientRect();
+  sweepCanvas.width = rect.width * devicePixelRatio;
+  sweepCanvas.height = rect.height * devicePixelRatio;
+  sweepCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+resizeSweep();
+window.addEventListener('resize', ()=>{ resizeSweep(); });
+
+function drawSweep(){
+  const c = sweepCanvas;
+  const ctx = sweepCtx;
+  ctx.clearRect(0,0,c.width, c.height);
+  const w = c.width / devicePixelRatio;
+  const h = c.height / devicePixelRatio;
+  const cx = w/2;
+  const cy = h/2;
+  const r = Math.min(w,h)/2 * 0.9;
+
+  // background grid rings & crosshair
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  for(let i=1;i<=4;i++){
+    ctx.beginPath();
+    ctx.arc(0,0,(r/4)*i,0,Math.PI*2);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.moveTo(-r,0); ctx.lineTo(r,0);
+  ctx.moveTo(0,-r); ctx.lineTo(0,r);
+  ctx.stroke();
+  ctx.restore();
+
+  // pulsing waves at center
+  const t = Date.now()/1200;
+  ctx.save();
+  ctx.translate(cx,cy);
+  for(let i=0;i<3;i++){
+    ctx.beginPath();
+    const rad = (Math.sin(t + i*0.6)*0.08 + 0.9 + i*0.15) * r*0.2;
+    ctx.strokeStyle = `rgba( ${accentRgb()}, ${0.06})`;
+    ctx.lineWidth = 1 + i*0.5;
+    ctx.arc(0,0, rad, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // rotating sweep
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(sweepAngle);
+  // gradient wedge
+  const grad = ctx.createLinearGradient(0,0,r,0);
+  grad.addColorStop(0, `rgba(${accentRgb()},0.35)`);
+  grad.addColorStop(1, `rgba(${accentRgb()},0.0)`);
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.arc(0,0, r, -0.03, 0.03);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // thin bright line
+  ctx.strokeStyle = `rgba(${accentRgb()},0.9)`;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.lineTo(r,0);
+  ctx.stroke();
+  ctx.restore();
+
+  // small blip example (random ships)
+  ctx.save();
+  ctx.translate(cx,cy);
+  for(let i=0;i<8;i++){
+    const a = (i/8)*Math.PI*2 + Math.sin(Date.now()/3000 + i) * 0.02;
+    const rr = r * (0.35 + 0.48*Math.abs(Math.sin(Date.now()/4000 + i)));
+    const x = Math.cos(a)*rr;
+    const y = Math.sin(a)*rr;
+    ctx.beginPath();
+    ctx.fillStyle = `rgba(${accentRgb()},${0.9 * Math.random().toFixed(2)})`;
+    ctx.arc(x,y, 3 + Math.random()*2, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  if(sweepRunning) sweepAngle += sweepSpeed;
+  requestAnimationFrame(drawSweep);
+}
+requestAnimationFrame(drawSweep);
+
+function accentRgb(){
+  // parse current CSS accent color to rgb values roughly
+  const style = getComputedStyle(document.body);
+  const accent = style.getPropertyValue('--accent').trim();
+  // basic hex parse fallback
+  try{
+    if(accent.startsWith('#')){
+      const hex = accent.replace('#','');
+      const r = parseInt(hex.substring(0,2),16);
+      const g = parseInt(hex.substring(2,4),16);
+      const b = parseInt(hex.substring(4,6),16);
+      return `${r},${g},${b}`;
+    }
+  }catch(e){}
+  // default red
+  return '255,26,26';
+}
+function toggleSweep(){ sweepRunning = !sweepRunning; document.getElementById('sweepSpeed').textContent = sweepRunning ? '1x' : 'stopped'; }
+
+/* ---------------------------
+   Depth sounder (simulated waveform)
+   --------------------------- */
+const depthCanvas = document.getElementById('depthCanvas');
+const dCtx = depthCanvas.getContext('2d');
+function resizeDepth(){
+  const rect = document.getElementById('extras-port').getBoundingClientRect();
+  depthCanvas.width = rect.width * devicePixelRatio;
+  depthCanvas.height = rect.height * devicePixelRatio;
+  dCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+resizeDepth();
+window.addEventListener('resize', ()=>{ resizeDepth(); });
+
+let depthOffset = 0;
+function drawDepth(){
+  const c = depthCanvas;
+  const ctx = dCtx;
+  ctx.clearRect(0,0,c.width/canvasScale(), c.height/canvasScale());
+  const w = c.width / devicePixelRatio;
+  const h = c.height / devicePixelRatio;
+  // background grid faint
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = `rgba(${accentRgb()},0.06)`;
+  ctx.lineWidth = 1;
+  for(let y=0;y<h;y+=20){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+
+  // waveform
+  ctx.beginPath();
+  ctx.strokeStyle = `rgba(${accentRgb()},0.9)`;
+  ctx.lineWidth = 2;
+  const t = Date.now()/800;
+  for(let x=0;x<w;x+=1){
+    const v = Math.sin((x/40) + t) * 10 + Math.sin((x/12)+ t*0.6)*6 + Math.sin((x/7)+t*1.2)*3;
+    const y = h*0.6 + v;
+    if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  // moving sonar "ping" dot
+  ctx.beginPath();
+  const px = (Date.now()/6) % w;
+  ctx.fillStyle = `rgba(${accentRgb()},0.9)`;
+  ctx.arc(px, h*0.6 + Math.sin(Date.now()/300)*12, 4, 0, Math.PI*2);
+  ctx.fill();
+
+  requestAnimationFrame(drawDepth);
+}
+drawDepth();
+
+function canvasScale(){ return devicePixelRatio || 1; }
+
+/* ---------------------------
+   Wind fetch (Open-Meteo) for Chicago (and display in extras)
+   --------------------------- */
+async function fetchWind(){
+  try {
+    const res = await fetch(openMeteoUrl(chicago.lat, chicago.lon));
+    if(!res.ok) throw new Error('no weather');
+    const js = await res.json();
+    const cw = js.current_weather;
+    const info = document.getElementById('windInfo');
+    info.textContent = `Wind ${Math.round(cw.windspeed)} mph • ${Math.round(cw.winddirection)}°`;
+  } catch(e){
+    document.getElementById('windInfo').textContent = 'Wind: unavailable';
+  }
+}
+
+/* ---------------------------
+   Radio static / signal generator (WebAudio)
+   --------------------------- */
+let audioCtx, noiseNode, gainNode, radioOn=false;
+function toggleRadio(){
+  const btn = document.getElementById('radioBtn');
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    // white noise using buffer source
+    const bufferSize = 2 * audioCtx.sampleRate;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++) data[i] = (Math.random()*2 -1) * 0.5;
+    noiseNode = audioCtx.createBufferSource();
+    noiseNode.buffer = buffer;
+    noiseNode.loop = true;
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0; // start muted
+    noiseNode.connect(gainNode).connect(audioCtx.destination);
+    noiseNode.start(0);
+  }
+  radioOn = !radioOn;
+  if(radioOn){
+    gainNode.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 0.05);
+    btn.textContent = 'RADIO ON';
+    btn.style.background = 'var(--accent)';
+  } else {
+    gainNode.gain.linearRampToValueAtTime(0.0, audioCtx.currentTime + 0.1);
+    btn.textContent = 'RADIO';
+    btn.style.background = 'transparent';
+  }
+}
+
+/* ---------------------------
+   Logbook ticker (auto entries)
+   --------------------------- */
+const marquee = document.getElementById('marquee');
+const log = [];
+function addLogEntry(text){
+  const t = new Date();
+  const stamp = t.toLocaleTimeString();
+  log.push(`[${stamp}] ${text}`);
+  if(log.length>30) log.shift();
+  marquee.textContent = log.join(' • ');
+}
+function populateInitialLogs(){
+  addLogEntry('System boot sequence complete.');
+  addLogEntry('Radar sweep online.');
+  addLogEntry('AIS feeds initializing (Chicago / Calumet).');
+  addLogEntry('Moon phase engine active.');
+  addLogEntry('Depth-sounder nominal.');
+}
+populateInitialLogs();
+setInterval(()=> addLogEntry('Auto check: systems nominal.'), 18_000);
+
+/* ---------------------------
+   Init / hooks
+   --------------------------- */
+window.addEventListener('load', ()=>{
+  // render moon initially
+  renderMoon();
+  // fetch wind and set interval
+  fetchWind();
+  setInterval(fetchWind, 120_000);
+
+  // resize canvases after load
+  setTimeout(()=> { resizeSweep(); resizeDepth(); renderMoon(); }, 220);
+});
+
+/* Expose small helpers */
+function renderMoonAndInfo(){ renderMoon(); }
+function toggleSweep(){ sweepRunning = !sweepRunning; document.getElementById('sweepSpeed').textContent = sweepRunning ? '1x' : 'paused'; }
+
+/* provide convenience for refresh buttons made earlier */
+window.reloadIframe = reloadIframe;
+window.openInNew = openInNew;
+window.renderMoon = renderMoon;
+window.snapshot = snapshot;
+window.toggleRadio = toggleRadio;
+</script>
+</body>
+</html>
