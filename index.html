@@ -21,17 +21,18 @@
       font-family: 'Press Start 2P', monospace;
     }
     h1 {
+      display: block;
       text-align: center;
-      font-size: 2rem;
+      font-size: 3rem; /* larger */
       margin: 20px 0;
       letter-spacing: 0.15em;
       color: var(--text-color);
-      text-shadow: 0 0 8px var(--glow-color), 0 0 12px var(--glow-color);
+      /* reduced glow */
+      text-shadow: 0 0 4px var(--glow-color), 0 0 6px var(--glow-color);
       animation: boot 3s steps(30, end) forwards, glitch 3s 3.2s infinite;
       white-space: nowrap;
       overflow: hidden;
       border-right: 2px solid var(--text-color);
-      display: inline-block;
     }
 
     @keyframes boot {
@@ -39,14 +40,13 @@
       to { width: 12ch; }
     }
 
-    /* CRT-style glitch flicker */
     @keyframes glitch {
-      0% { text-shadow: 0 0 8px var(--glow-color), 0 0 12px var(--glow-color); transform: none; }
-      20% { text-shadow: 2px 0 var(--glow-color), -2px 0 #ff4d4d; transform: skewX(5deg); }
-      40% { text-shadow: -2px 0 var(--glow-color), 2px 0 #ff4d4d; transform: skewX(-5deg); }
-      60% { text-shadow: 0 0 8px var(--glow-color), 0 0 12px var(--glow-color); transform: none; }
-      80% { text-shadow: 1px 0 var(--glow-color), -1px 0 #ff4d4d; transform: skewX(3deg); }
-      100% { text-shadow: 0 0 8px var(--glow-color), 0 0 12px var(--glow-color); transform: none; }
+      0% { text-shadow: 0 0 4px var(--glow-color), 0 0 6px var(--glow-color); transform: none; }
+      20% { text-shadow: 2px 0 var(--glow-color), -2px 0 #ff4d4d; transform: skewX(3deg); }
+      40% { text-shadow: -2px 0 var(--glow-color), 2px 0 #ff4d4d; transform: skewX(-3deg); }
+      60% { text-shadow: 0 0 4px var(--glow-color), 0 0 6px var(--glow-color); transform: none; }
+      80% { text-shadow: 1px 0 var(--glow-color), -1px 0 #ff4d4d; transform: skewX(2deg); }
+      100% { text-shadow: 0 0 4px var(--glow-color), 0 0 6px var(--glow-color); transform: none; }
     }
 
     .container {
@@ -56,6 +56,7 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
+      align-items: center;
     }
     .widget {
       background-color: var(--widget-bg);
@@ -66,13 +67,16 @@
       display: flex;
       flex-direction: column;
       position: relative;
+      aspect-ratio: 1 / 1; /* square shape */
+      width: 90%; /* default width */
+      max-width: 500px; /* keep square on desktop */
     }
     iframe {
       border: none;
       width: 100%;
+      height: 100%;
       flex-grow: 1;
     }
-    /* Refresh button */
     .refresh-btn {
       position: absolute;
       top: 5px;
@@ -87,25 +91,20 @@
     }
     .refresh-btn:hover { background: #ff4d4d; }
 
-    /* Layout groups */
-    .horizontal-group, .moon-weather-group {
+    /* group wrappers */
+    .moon-weather-group {
       display: flex;
       gap: 20px;
+      width: 100%;
+      justify-content: center;
     }
-    .horizontal-group > .widget,
-    .moon-weather-group > .widget {
+    .moon-weather-group .widget {
       flex: 1;
     }
-
-    /* Heights */
-    .marine-traffic iframe { height: 400px; }
-    .weather iframe { height: 300px; }
-    .moon-iframe iframe { height: 200px; }
-
-    /* Responsive stacking */
     @media (max-width: 768px) {
-      .horizontal-group, .moon-weather-group {
+      .moon-weather-group {
         flex-direction: column;
+        align-items: center;
       }
     }
   </style>
@@ -115,7 +114,7 @@
 
   <div class="container">
     <!-- AIS Marine Traffic -->
-    <div class="widget marine-traffic">
+    <div class="widget">
       <button class="refresh-btn" onclick="reloadFrame('ais')">REFRESH</button>
       <iframe id="ais" 
         src="https://www.marinetraffic.com/en/ais/embed/zoom:10/centery:41.8781/centerx:-87.6298/showmenu:false/shownames:false/maptype:1"
@@ -124,7 +123,7 @@
     </div>
 
     <!-- Weather Radar -->
-    <div class="widget weather">
+    <div class="widget">
       <button class="refresh-btn" onclick="reloadFrame('radar')">REFRESH</button>
       <iframe id="radar"
         src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&zoom=8&radar=1&level=surface"
@@ -134,7 +133,7 @@
 
     <!-- Moon Phase (left) + Current Weather Widget (right) -->
     <div class="moon-weather-group">
-      <div class="widget moon-iframe">
+      <div class="widget">
         <button class="refresh-btn" onclick="reloadFrame('moon')">REFRESH</button>
         <iframe id="moon"
           src="https://dimden.dev/moon?custom=1&textColor=%23FF0000"
@@ -143,8 +142,9 @@
       </div>
       <div class="widget">
         <button class="refresh-btn" onclick="reloadFrame('wx')">REFRESH</button>
+        <!-- working weather widget from weatherwidget.io -->
         <iframe id="wx"
-          src="https://forecast7.com/en/41d88n87d63/chicago/?unit=us"
+          src="https://weatherwidget.io/w/?lat=41.8781&lon=-87.6298&unit=us"
           title="Chicago Weather" loading="lazy">
         </iframe>
       </div>
