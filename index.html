@@ -27,16 +27,28 @@
       letter-spacing: 0.15em;
       color: var(--text-color);
       text-shadow: 0 0 8px var(--glow-color), 0 0 12px var(--glow-color);
-      animation: boot 3s steps(30, end);
+      animation: boot 3s steps(30, end) forwards, glitch 3s 3.2s infinite;
       white-space: nowrap;
       overflow: hidden;
       border-right: 2px solid var(--text-color);
       display: inline-block;
     }
+
     @keyframes boot {
       from { width: 0; }
-      to { width: 15ch; }
+      to { width: 12ch; }
     }
+
+    /* CRT-style glitch flicker */
+    @keyframes glitch {
+      0% { text-shadow: 0 0 8px var(--glow-color), 0 0 12px var(--glow-color); transform: none; }
+      20% { text-shadow: 2px 0 var(--glow-color), -2px 0 #ff4d4d; transform: skewX(5deg); }
+      40% { text-shadow: -2px 0 var(--glow-color), 2px 0 #ff4d4d; transform: skewX(-5deg); }
+      60% { text-shadow: 0 0 8px var(--glow-color), 0 0 12px var(--glow-color); transform: none; }
+      80% { text-shadow: 1px 0 var(--glow-color), -1px 0 #ff4d4d; transform: skewX(3deg); }
+      100% { text-shadow: 0 0 8px var(--glow-color), 0 0 12px var(--glow-color); transform: none; }
+    }
+
     .container {
       width: 90vw;
       max-width: 1200px;
@@ -99,7 +111,7 @@
   </style>
 </head>
 <body>
-  <h1>BRIDGE HUB</h1>
+  <h1>BRIDGE HUD</h1>
 
   <div class="container">
     <!-- AIS Marine Traffic -->
