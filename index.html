@@ -9,9 +9,9 @@
 
   :root {
     --bg-color: #000;
-    --grid-color: rgba(255, 255, 255, 0.02);
+    --grid-color: rgba(255,255,255,0.02);
     --text-color: #FF1A1A;
-    --widget-border: #FF1A1A;
+    --border-color: #FF1A1A;
     --glow-color: #FF0000;
   }
 
@@ -23,7 +23,6 @@
     position: relative;
   }
 
-  /* scanline / grid background */
   body::before {
     content: "";
     position: fixed;
@@ -39,10 +38,10 @@
   h1 {
     text-align: center;
     font-size: 3rem;
-    margin: 20px auto;
+    margin: 20px auto 10px;
     letter-spacing: 0.15em;
     color: var(--text-color);
-    text-shadow: none; /* no glow */
+    text-shadow: none;
     white-space: nowrap;
     overflow: hidden;
     border-right: 2px solid var(--text-color);
@@ -73,67 +72,63 @@
 
   .container {
     width: 95vw;
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto 40px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 40px;
     z-index: 1;
     position: relative;
+    align-items: center;
   }
 
-  .widget {
+  .radar-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .radar-circle {
     background-color: rgba(0,0,0,0.8);
-    border: 2px solid var(--widget-border);
-    border-radius: 8px;
-    box-shadow: 0 0 8px var(--glow-color);
+    border: 6px solid var(--border-color);
+    box-shadow: 0 0 15px var(--glow-color);
+    border-radius: 50%;
+    width: 400px;
+    height: 400px;
+    overflow: hidden;
     position: relative;
+  }
+
+  .radar-circle iframe {
+    position: absolute;
+    top: -25%; left: -25%;
+    width: 150%; height: 150%;
+    border: none;
+    clip-path: circle(50% at 50% 50%);
+  }
+
+  .button-column {
     display: flex;
     flex-direction: column;
+    gap: 10px;
   }
 
-  iframe {
-    border: none;
-    width: 100%;
-    height: 500px; /* default full height for full-width widgets */
-    flex-grow: 1;
-  }
-
-  /* two-column layout for the bottom widgets */
-  .split {
-    display: flex;
-    gap: 20px;
-  }
-  .split .widget {
-    flex: 1;
-  }
-  .split iframe {
-    height: 400px;
-  }
-
-  .refresh-btn {
-    position: absolute;
-    top: 5px;
-    right: 5px;
+  .console-btn {
     background: var(--text-color);
     color: var(--bg-color);
     border: none;
+    padding: 8px;
     font-size: 0.5rem;
-    padding: 4px 6px;
     cursor: pointer;
     font-family: 'Press Start 2P', monospace;
-    z-index: 2;
+    width: 60px;
   }
 
-  .refresh-btn:hover { background: #ff4d4d; }
+  .console-btn:hover { background: #ff4d4d; }
 
-  @media (max-width: 768px) {
-    .split {
-      flex-direction: column;
-    }
-    iframe {
-      height: 300px;
-    }
+  @media (max-width: 900px) {
+    .radar-wrapper { flex-direction: column; }
+    .button-column { flex-direction: row; }
   }
 </style>
 </head>
@@ -143,34 +138,50 @@
 
   <div class="container">
     <!-- AIS Marine Traffic -->
-    <div class="widget">
-      <button class="refresh-btn" onclick="reloadFrame('ais')">REFRESH</button>
-      <iframe id="ais" 
-        src="https://www.marinetraffic.com/en/ais/embed/zoom:10/centery:41.8781/centerx:-87.6298/showmenu:false/shownames:false/maptype:1"
-        allowfullscreen loading="lazy"></iframe>
+    <div class="radar-wrapper">
+      <div class="radar-circle">
+        <iframe id="ais"
+          src="https://www.marinetraffic.com/en/ais/embed/zoom:10/centery:41.8781/centerx:-87.6298/showmenu:false/shownames:false/maptype:1"
+          allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div class="button-column">
+        <button class="console-btn" onclick="reloadFrame('ais')">REFRESH</button>
+      </div>
     </div>
 
     <!-- Weather Radar -->
-    <div class="widget">
-      <button class="refresh-btn" onclick="reloadFrame('radar')">REFRESH</button>
-      <iframe id="radar"
-        src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&zoom=8&radar=1&level=surface"
-        allowfullscreen loading="lazy"></iframe>
+    <div class="radar-wrapper">
+      <div class="radar-circle">
+        <iframe id="radar"
+          src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&zoom=8&radar=1&level=surface"
+          allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div class="button-column">
+        <button class="console-btn" onclick="reloadFrame('radar')">REFRESH</button>
+      </div>
     </div>
 
-    <!-- Moon Phase + Current Weather -->
-    <div class="split">
-      <div class="widget">
-        <button class="refresh-btn" onclick="reloadFrame('moon')">REFRESH</button>
+    <!-- Moon Phase -->
+    <div class="radar-wrapper">
+      <div class="radar-circle">
         <iframe id="moon"
           src="https://dimden.dev/moon?custom=1&textColor=%23FF0000"
           title="Moon Phase" loading="lazy"></iframe>
       </div>
-      <div class="widget">
-        <button class="refresh-btn" onclick="reloadFrame('wx')">REFRESH</button>
-        <iframe id="wx"
-          src="https://forecast7.com/en/41d88n87d63/chicago/?unit=us"
-          title="Chicago Weather" loading="lazy"></iframe>
+      <div class="button-column">
+        <button class="console-btn" onclick="reloadFrame('moon')">REFRESH</button>
+      </div>
+    </div>
+
+    <!-- Chicago News Headlines -->
+    <div class="radar-wrapper">
+      <div class="radar-circle">
+        <iframe id="news"
+          src="https://www.rssdog.com/index.php?url=https%3A%2F%2Fwww.nbcchicago.com%2Ffeed%2F&mode=html&showonly=&maxitems=8&showdescs=1&desctrim=100&descmax=200&tabwidth=100%"
+          title="Chicago News Headlines" loading="lazy"></iframe>
+      </div>
+      <div class="button-column">
+        <button class="console-btn" onclick="reloadFrame('news')">REFRESH</button>
       </div>
     </div>
   </div>
@@ -185,16 +196,14 @@
     const root = document.documentElement;
     const current = getComputedStyle(root).getPropertyValue('--text-color').trim();
     if (current === '#FF1A1A') {
-      // switch to green day mode
       root.style.setProperty('--text-color', '#00FF00');
-      root.style.setProperty('--widget-border', '#00FF00');
+      root.style.setProperty('--border-color', '#00FF00');
       root.style.setProperty('--glow-color', '#00FF00');
       document.querySelector('.mode-btn').style.background = '#00FF00';
       document.querySelector('.mode-btn').style.color = '#000';
     } else {
-      // switch back to red night mode
       root.style.setProperty('--text-color', '#FF1A1A');
-      root.style.setProperty('--widget-border', '#FF1A1A');
+      root.style.setProperty('--border-color', '#FF1A1A');
       root.style.setProperty('--glow-color', '#FF0000');
       document.querySelector('.mode-btn').style.background = '#FF1A1A';
       document.querySelector('.mode-btn').style.color = '#000';
