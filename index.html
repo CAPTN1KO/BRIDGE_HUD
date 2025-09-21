@@ -23,7 +23,7 @@
     position: relative;
   }
 
-  /* scanline grid background */
+  /* scanline / grid background */
   body::before {
     content: "";
     position: fixed;
@@ -39,27 +39,27 @@
   h1 {
     text-align: center;
     font-size: 3rem;
-    margin: 20px 0;
+    margin: 20px auto;
     letter-spacing: 0.15em;
     color: var(--text-color);
-    text-shadow: 0 0 2px var(--glow-color);
-    z-index: 1;
+    text-shadow: none; /* no glow */
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: 2px solid var(--text-color);
+    animation: typewriter 3s steps(30, end);
+    width: 14ch;
     position: relative;
-    animation: glitch 2s infinite;
+    z-index: 1;
   }
 
-  @keyframes glitch {
-    0% { text-shadow: 0 0 2px var(--glow-color); transform: translate(0,0);}
-    20% { text-shadow: -1px 0 var(--glow-color), 1px 0 var(--glow-color); transform: translate(0.5px,-0.5px);}
-    40% { text-shadow: 1px 0 var(--glow-color); transform: translate(-0.5px,0.5px);}
-    60% { text-shadow: 0 0 2px var(--glow-color); transform: translate(0,0);}
-    80% { text-shadow: 0 0 4px var(--glow-color); }
-    100% { text-shadow: 0 0 2px var(--glow-color); transform: translate(0,0);}
+  @keyframes typewriter {
+    from { width: 0; }
+    to { width: 14ch; }
   }
 
   .mode-btn {
     display: block;
-    margin: 0 auto 20px;
+    margin: 10px auto 20px;
     background: var(--text-color);
     color: var(--bg-color);
     border: none;
@@ -73,10 +73,10 @@
 
   .container {
     width: 95vw;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto 40px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 20px;
     z-index: 1;
     position: relative;
@@ -86,9 +86,8 @@
     background-color: rgba(0,0,0,0.8);
     border: 2px solid var(--widget-border);
     border-radius: 8px;
-    box-shadow: 0 0 5px var(--glow-color);
+    box-shadow: 0 0 8px var(--glow-color);
     position: relative;
-    aspect-ratio: 1/1; /* square shape */
     display: flex;
     flex-direction: column;
   }
@@ -96,8 +95,20 @@
   iframe {
     border: none;
     width: 100%;
-    height: 100%;
+    height: 500px; /* default full height for full-width widgets */
     flex-grow: 1;
+  }
+
+  /* two-column layout for the bottom widgets */
+  .split {
+    display: flex;
+    gap: 20px;
+  }
+  .split .widget {
+    flex: 1;
+  }
+  .split iframe {
+    height: 400px;
   }
 
   .refresh-btn {
@@ -115,6 +126,15 @@
   }
 
   .refresh-btn:hover { background: #ff4d4d; }
+
+  @media (max-width: 768px) {
+    .split {
+      flex-direction: column;
+    }
+    iframe {
+      height: 300px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -122,6 +142,7 @@
   <button class="mode-btn" onclick="toggleMode()">DAY / NIGHT</button>
 
   <div class="container">
+    <!-- AIS Marine Traffic -->
     <div class="widget">
       <button class="refresh-btn" onclick="reloadFrame('ais')">REFRESH</button>
       <iframe id="ais" 
@@ -129,6 +150,7 @@
         allowfullscreen loading="lazy"></iframe>
     </div>
 
+    <!-- Weather Radar -->
     <div class="widget">
       <button class="refresh-btn" onclick="reloadFrame('radar')">REFRESH</button>
       <iframe id="radar"
@@ -136,19 +158,20 @@
         allowfullscreen loading="lazy"></iframe>
     </div>
 
-    <div class="widget">
-      <button class="refresh-btn" onclick="reloadFrame('moon')">REFRESH</button>
-      <iframe id="moon"
-        src="https://dimden.dev/moon?custom=1&textColor=%23FF0000"
-        title="Moon Phase" loading="lazy"></iframe>
-    </div>
-
-    <div class="widget">
-      <button class="refresh-btn" onclick="reloadFrame('wx')">REFRESH</button>
-      <!-- working current weather widget -->
-      <iframe id="wx"
-        src="https://forecast7.com/en/41d88n87d63/chicago/?unit=us&apikey=free"
-        title="Chicago Weather" loading="lazy"></iframe>
+    <!-- Moon Phase + Current Weather -->
+    <div class="split">
+      <div class="widget">
+        <button class="refresh-btn" onclick="reloadFrame('moon')">REFRESH</button>
+        <iframe id="moon"
+          src="https://dimden.dev/moon?custom=1&textColor=%23FF0000"
+          title="Moon Phase" loading="lazy"></iframe>
+      </div>
+      <div class="widget">
+        <button class="refresh-btn" onclick="reloadFrame('wx')">REFRESH</button>
+        <iframe id="wx"
+          src="https://forecast7.com/en/41d88n87d63/chicago/?unit=us"
+          title="Chicago Weather" loading="lazy"></iframe>
+      </div>
     </div>
   </div>
 
@@ -160,16 +183,21 @@
 
   function toggleMode() {
     const root = document.documentElement;
-    if (getComputedStyle(root).getPropertyValue('--text-color').trim() === '#FF1A1A') {
+    const current = getComputedStyle(root).getPropertyValue('--text-color').trim();
+    if (current === '#FF1A1A') {
       // switch to green day mode
       root.style.setProperty('--text-color', '#00FF00');
       root.style.setProperty('--widget-border', '#00FF00');
       root.style.setProperty('--glow-color', '#00FF00');
+      document.querySelector('.mode-btn').style.background = '#00FF00';
+      document.querySelector('.mode-btn').style.color = '#000';
     } else {
-      // switch to red night mode
+      // switch back to red night mode
       root.style.setProperty('--text-color', '#FF1A1A');
       root.style.setProperty('--widget-border', '#FF1A1A');
       root.style.setProperty('--glow-color', '#FF0000');
+      document.querySelector('.mode-btn').style.background = '#FF1A1A';
+      document.querySelector('.mode-btn').style.color = '#000';
     }
   }
 </script>
