@@ -1,214 +1,341 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>BRIDGE HUD</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-  :root {
-    --bg-color: #000;
-    --grid-color: rgba(255,255,255,0.02);
-    --text-color: #FF1A1A;
-    --border-color: #FF1A1A;
-    --glow-color: #FF0000;
+  :root{
+    --bg:#000;
+    --muted-grid: rgba(255,255,255,0.02);
+    --accent:#ff1a1a;     /* night red */
+    --accent-glow: rgba(255,26,26,0.28);
+    --accent-muted:#ff6666;
+    --panel:#071014;
+    --text:#ffb6b6;
+  }
+  [data-mode="day"]{
+    --accent: #00ff66;    /* day green */
+    --accent-glow: rgba(0,255,102,0.22);
+    --accent-muted: #66ff9a;
+    --text: #dfffe6;
   }
 
-  body {
-    margin: 0;
-    background-color: var(--bg-color);
-    font-family: 'Press Start 2P', monospace;
-    color: var(--text-color);
-    position: relative;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family: "Press Start 2P", monospace;
     background:
-      linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px),
-      linear-gradient(to right, var(--grid-color) 1px, transparent 1px);
-    background-size: 20px 20px;
-    pointer-events: none;
-    z-index: 0;
+      radial-gradient(1200px 600px at 8% 6%, rgba(255,26,26,0.02), transparent 6%),
+      var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
   }
 
-  h1 {
-    text-align: center;
-    font-size: 3rem;
-    margin: 20px auto 10px;
-    letter-spacing: 0.15em;
-    color: var(--text-color);
-    text-shadow: none;
-    white-space: nowrap;
-    overflow: hidden;
-    border-right: 2px solid var(--text-color);
-    animation: typewriter 3s steps(30, end);
-    width: 14ch;
-    position: relative;
-    z-index: 1;
+  /* faint scanline / grid background (scantiness) - visible everywhere except header */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:
+      linear-gradient(to bottom, var(--muted-grid) 1px, transparent 1px),
+      linear-gradient(to right, var(--muted-grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events:none;
+    z-index:0;
+    mix-blend-mode:overlay;
   }
 
-  @keyframes typewriter {
-    from { width: 0; }
-    to { width: 14ch; }
+  header{
+    width:100%;
+    padding:18px 12px 6px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:2;
+    position:relative;
   }
 
-  .mode-btn {
-    display: block;
-    margin: 10px auto 20px;
-    background: var(--text-color);
-    color: var(--bg-color);
-    border: none;
-    padding: 10px 20px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    font-family: 'Press Start 2P', monospace;
-    z-index: 1;
-    position: relative;
+  h1{
+    margin:0;
+    font-size: clamp(1.8rem, 5.6vw, 3.2rem);
+    letter-spacing:.18em;
+    color:var(--text);
+    text-shadow:none; /* no neon glow per request */
+    display:block;
+    white-space:nowrap;
+    overflow:hidden;
+    border-right:2px solid rgba(255,255,255,0.06);
+    width:0ch;
+    animation: boot 2.6s steps(16,end) forwards;
+  }
+  @keyframes boot {
+    to { width: 12.5ch; border-right:2px solid transparent; }
   }
 
-  .container {
-    width: 95vw;
-    max-width: 1600px;
-    margin: 0 auto 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
-    z-index: 1;
-    position: relative;
-    align-items: center;
+  .controls-top{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    position:absolute;
+    right:12px;
+    top:10px;
+    z-index:3;
   }
 
-  .radar-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+  .mode-btn{
+    background:var(--accent);
+    color:#000;
+    border:none;
+    padding:8px 12px;
+    border-radius:6px;
+    font-family:"Press Start 2P", monospace;
+    cursor:pointer;
+    font-size:11px;
+    box-shadow:0 0 14px var(--accent-glow);
   }
 
-  .radar-circle {
-    background-color: rgba(0,0,0,0.8);
-    border: 6px solid var(--border-color);
-    box-shadow: 0 0 15px var(--glow-color);
-    border-radius: 50%;
-    width: 400px;
-    height: 400px;
-    overflow: hidden;
-    position: relative;
+  .wrap{
+    width:min(1400px,96vw);
+    margin:20px auto 56px;
+    z-index:2;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+    align-items:center;
   }
 
-  .radar-circle iframe {
-    position: absolute;
-    top: -25%; left: -25%;
-    width: 150%; height: 150%;
-    border: none;
+  /* row for two AIS circles */
+  .row-two {
+    width:100%;
+    display:flex;
+    gap:28px;
+    justify-content:center;
+    align-items:flex-start;
+  }
+
+  .col {
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    width:100%;
+  }
+
+  /* radar/porthole circle */
+  .port {
+    position:relative;
+    width:520px;
+    height:520px;
+    border-radius:50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.35));
+    border: 8px solid var(--accent);
+    box-shadow: 0 0 50px var(--accent-glow), inset 0 6px 18px rgba(0,0,0,0.6);
+    overflow:hidden;
+  }
+
+  /* inner bezel ring */
+  .port::after{
+    content:"";
+    position:absolute;
+    inset:8px;
+    border-radius:50%;
+    box-shadow: inset 0 0 18px rgba(0,0,0,0.5);
+    pointer-events:none;
+  }
+
+  /* clipped iframe inside the circular port */
+  .port iframe{
+    position:absolute;
+    left:0; top:0;
+    width:100%;
+    height:100%;
+    border:0;
+    /* clip to circle to be safe */
     clip-path: circle(50% at 50% 50%);
+    background: transparent;
   }
 
-  .button-column {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  /* small label */
+  .label {
+    position:absolute;
+    left:14px;
+    top:14px;
+    z-index:4;
+    font-size:11px;
+    color:var(--accent-muted);
+    padding:7px 10px;
+    background: rgba(0,0,0,0.26);
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,0.03);
   }
 
-  .console-btn {
-    background: var(--text-color);
-    color: var(--bg-color);
-    border: none;
-    padding: 8px;
-    font-size: 0.5rem;
-    cursor: pointer;
-    font-family: 'Press Start 2P', monospace;
-    width: 60px;
+  /* buttons column to the right of each circle */
+  .btn-col {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    align-items:center;
+  }
+  .console-btn{
+    width:86px;
+    padding:8px 6px;
+    font-size:11px;
+    background:var(--accent);
+    color:#000;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    box-shadow:0 0 12px var(--accent-glow);
+    font-family:"Press Start 2P", monospace;
+  }
+  .console-btn.ghost{
+    background:transparent;
+    color:var(--text);
+    border:1px solid rgba(255,255,255,0.04);
+    box-shadow:none;
   }
 
-  .console-btn:hover { background: #ff4d4d; }
-
-  @media (max-width: 900px) {
-    .radar-wrapper { flex-direction: column; }
-    .button-column { flex-direction: row; }
+  /* for bottom row with three circles (moon, radar animation, extras) */
+  .bottom-row{
+    width:100%;
+    display:flex;
+    gap:28px;
+    justify-content:center;
+    align-items:flex-start;
   }
+
+  /* smaller circular for moon and extras */
+  .port-small {
+    width:360px;
+    height:360px;
+    border-radius:50%;
+    border:8px solid var(--accent);
+    box-shadow:0 0 30px var(--accent-glow);
+    overflow:hidden;
+    position:relative;
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.35));
+  }
+
+  /* radar sweep canvas sits over top inside port */
+  .sweep-canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    pointer-events:none;
+    mix-blend-mode: screen;
+  }
+
+  /* overlay small info at bottom */
+  .info {
+    position:absolute;
+    bottom:12px;
+    left:12px;
+    font-size:10px;
+    color:var(--accent-muted);
+    background:rgba(0,0,0,0.22);
+    padding:6px 8px;
+    border-radius:7px;
+  }
+
+  /* depth-sounder canvas */
+  .depth-canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  /* logbook ticker */
+  .ticker {
+    width:100%;
+    background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(0,0,0,0.5));
+    border:1px solid rgba(255,255,255,0.03);
+    padding:10px 12px;
+    font-size:11px;
+    overflow:hidden;
+    color:var(--accent-muted);
+    white-space:nowrap;
+  }
+  .ticker > .marquee {
+    display:inline-block;
+    padding-left:100%;
+    animation: ticker 28s linear infinite;
+  }
+  @keyframes ticker {
+    from { transform: translateX(0%); }
+    to { transform: translateX(-100%); }
+  }
+
+  /* responsive */
+  @media (max-width:1200px){
+    .port{ width:420px; height:420px; }
+    .port-small{ width:300px; height:300px; }
+  }
+  @media (max-width:900px){
+    .row-two{ flex-direction:column; align-items:center; }
+    .bottom-row{ flex-direction:column; align-items:center; }
+    .btn-col{ flex-direction:row; gap:8px; }
+    .port{ width:320px; height:320px; }
+    .port-small{ width:260px; height:260px; }
+  }
+
+  /* small note / footer */
+  footer{ color: rgba(255,255,255,0.08); font-size:12px; margin:24px 0 38px; }
 </style>
 </head>
-<body>
+<body data-mode="night">
+
+<header>
   <h1>BRIDGE HUD</h1>
-  <button class="mode-btn" onclick="toggleMode()">DAY / NIGHT</button>
+  <div class="controls-top">
+    <button class="mode-btn" id="modeToggle">DAY</button>
+  </div>
+</header>
 
-  <div class="container">
-    <!-- AIS Marine Traffic -->
-    <div class="radar-wrapper">
-      <div class="radar-circle">
-        <iframe id="ais"
+<main class="wrap">
+
+  <!-- Top row: two large AIS circles side-by-side -->
+  <div class="row-two">
+    <div class="col" style="max-width:calc(50% - 14px); min-width:300px;">
+      <div class="port" id="port-chicago">
+        <div class="label">AIS — Chicago (Loop)</div>
+        <iframe id="ais-chicago"
           src="https://www.marinetraffic.com/en/ais/embed/zoom:10/centery:41.8781/centerx:-87.6298/showmenu:false/shownames:false/maptype:1"
-          allowfullscreen loading="lazy"></iframe>
-      </div>
-      <div class="button-column">
-        <button class="console-btn" onclick="reloadFrame('ais')">REFRESH</button>
+          title="AIS Chicago"></iframe>
+        <div class="info">Chicago Harbor</div>
       </div>
     </div>
 
-    <!-- Weather Radar -->
-    <div class="radar-wrapper">
-      <div class="radar-circle">
-        <iframe id="radar"
-          src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&zoom=8&radar=1&level=surface"
-          allowfullscreen loading="lazy"></iframe>
-      </div>
-      <div class="button-column">
-        <button class="console-btn" onclick="reloadFrame('radar')">REFRESH</button>
-      </div>
-    </div>
-
-    <!-- Moon Phase -->
-    <div class="radar-wrapper">
-      <div class="radar-circle">
-        <iframe id="moon"
-          src="https://dimden.dev/moon?custom=1&textColor=%23FF0000"
-          title="Moon Phase" loading="lazy"></iframe>
-      </div>
-      <div class="button-column">
-        <button class="console-btn" onclick="reloadFrame('moon')">REFRESH</button>
+    <div class="col" style="max-width:calc(50% - 14px); min-width:300px;">
+      <div class="port" id="port-calumet">
+        <div class="label">AIS — Calumet Harbor</div>
+        <!-- approximate Calumet Harbor embed, center coordinates included -->
+        <iframe id="ais-calumet"
+          src="https://www.marinetraffic.com/en/ais/embed/zoom:12/centery:41.6700/centerx:-87.5300/showmenu:false/shownames:false/maptype:1"
+          title="AIS Calumet Harbor"></iframe>
+        <div class="info">Calumet Harbor</div>
       </div>
     </div>
 
-    <!-- Chicago News Headlines -->
-    <div class="radar-wrapper">
-      <div class="radar-circle">
-        <iframe id="news"
-          src="https://www.rssdog.com/index.php?url=https%3A%2F%2Fwww.nbcchicago.com%2Ffeed%2F&mode=html&showonly=&maxitems=8&showdescs=1&desctrim=100&descmax=200&tabwidth=100%"
-          title="Chicago News Headlines" loading="lazy"></iframe>
-      </div>
-      <div class="button-column">
-        <button class="console-btn" onclick="reloadFrame('news')">REFRESH</button>
-      </div>
-    </div>
+    <!-- buttons column (positioned to float right of the two) -->
   </div>
 
-<script>
-  function reloadFrame(id) {
-    const frame = document.getElementById(id);
-    frame.src = frame.src;
-  }
-
-  function toggleMode() {
-    const root = document.documentElement;
-    const current = getComputedStyle(root).getPropertyValue('--text-color').trim();
-    if (current === '#FF1A1A') {
-      root.style.setProperty('--text-color', '#00FF00');
-      root.style.setProperty('--border-color', '#00FF00');
-      root.style.setProperty('--glow-color', '#00FF00');
-      document.querySelector('.mode-btn').style.background = '#00FF00';
-      document.querySelector('.mode-btn').style.color = '#000';
-    } else {
-      root.style.setProperty('--text-color', '#FF1A1A');
-      root.style.setProperty('--border-color', '#FF1A1A');
-      root.style.setProperty('--glow-color', '#FF0000');
-      document.querySelector('.mode-btn').style.background = '#FF1A1A';
-      document.querySelector('.mode-btn').style.color = '#000';
-    }
-  }
-</script>
-</body>
-</html>
+  <!-- Row with radar sweep (left), moon (center), extras (right) -->
+  <div class="bottom-row" style="width:100%; justify-content:center;">
+    <!-- Radar sweep / radiowave animation -->
+    <div style="display:flex; gap:12px; align-items:flex-start;">
+      <div class="port-small" id="sweep-port">
+        <div class="label">RADAR SWEEP</div>
+        <canvas id="sweepCanvas" class="sweep-canvas" width="600" height="600"></canvas>
+        <div class="info">Sweep speed: <span id="sweepSpeed">1x</span></div>
+      </div>
+      <div class="btn-col" aria-hidden="true" style="margin-left:6px;">
+        <button class="console-btn" onclick="toggleSweep()">TOGGLE SWEEP</button>
+        <butto
