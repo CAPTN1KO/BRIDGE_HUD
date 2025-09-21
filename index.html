@@ -1,315 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
   <title>BRIDGE HUD</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-    :root {
-      --bg-color: #000000;
-      --text-color: #FF0000;
-      --widget-bg: #111;
-      --widget-border: #FF0000;
-    }
-    .light {
-      --bg-color: #fff;
-      --text-color: #000;
-      --widget-bg: #eee;
-      --widget-border: #000;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      margin: 0;
-      padding: 0;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      font-family: 'Press Start 2P', monospace, monospace;
-      text-shadow:
-        0 0 5px var(--glow-color),
-        0 0 10px var(--glow-color);
-    }
-    h1 {
-      text-align: center;
+      background: #000;
+      color: #ff1a1a;
       font-family: 'Press Start 2P', monospace;
-      font-size: 2rem;
-      margin: 20px 0;
-      letter-spacing: 0.15em;
-      color: var(--text-color);
-      text-shadow:
-        0 0 8px var(--glow-color),
-        0 0 12px var(--glow-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
     }
-    .toggle-container {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 1000;
-      font-family: monospace;
-      font-size: 0.8rem;
-      user-select: none;
-      color: var(--text-color);
-      text-shadow: 0 0 5px var(--glow-color);
-    }
-    .toggle-container input[type="checkbox"] {
-      transform: scale(1.5);
-      margin-left: 0.5em;
-      cursor: pointer;
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    h1 {
+      margin-bottom: 30px;
+      font-size: 3rem;
+      color: #ff0000;
+      text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 20px #880000;
     }
     .container {
-      width: 90vw;
+      width: 90%;
       max-width: 1200px;
-      margin: 0 auto 40px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 30px;
     }
-    .widget {
-      background-color: var(--widget-bg);
-      border: 2px solid var(--widget-border);
-      border-radius: 8px;
-      box-shadow:
-        0 0 10px var(--glow-color);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+    .ais-section, .radar-section, .moon-section, .weather-section {
+      border: 2px solid #ff1a1a;
+      padding: 20px;
+      background: rgba(255,0,0,0.05);
+      position: relative;
     }
-    iframe {
-      border: none;
+    .ais-section {
+      height: 400px;
+      overflow-y: auto;
+    }
+    .ais-item {
+      padding: 8px 0;
+      border-bottom: 1px dashed #ff1a1a;
+      font-size: 1rem;
+    }
+    .radar-section {
+      height: 300px;
+    }
+    .radar-widget {
       width: 100%;
       height: 100%;
-      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111;
+      color: #ff1a1a;
+      font-size: 1.2rem;
     }
-    /* Marine Traffic big full width with fixed height */
-    .marine-traffic {
-      height: 400px;
-    }
-    /* Horizontal side-by-side container for weather widgets */
-    .horizontal-group {
+    .bottom-row {
       display: flex;
       gap: 20px;
-      height: 240px;
     }
-    .horizontal-group > .widget {
+    .moon-section, .weather-section {
       flex: 1;
-    }
-    /* Moon and tide group side-by-side */
-    .moon-tide-group {
-      display: flex;
-      gap: 20px;
-      height: 220px;
-    }
-    .moon-tide-group > .widget {
-      flex: 1;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-    /* Smaller height for moon iframe */
-    .moon-iframe {
-      height: 180px;
-      border: none;
-      background: transparent;
-      width: 100%;
-      display: block;
-      margin: 0 auto;
-    }
-    /* Other widgets stacked */
-    .stacked-group {
+      height: 200px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
-    }
-    /* Timer styling */
-    .timer-content {
-      padding: 20px;
-      text-align: center;
-      font-family: monospace;
+      align-items: center;
+      justify-content: center;
       font-size: 1rem;
-      color: var(--text-color);
-      text-shadow:
-        0 0 5px var(--glow-color);
     }
-    input[type="number"] {
-      width: 60px;
-      font-size: 1rem;
-      margin: 5px;
-      background-color: var(--widget-bg);
-      color: var(--text-color);
-      border: 1px solid var(--widget-border);
-      border-radius: 4px;
-      text-align: center;
-      font-family: monospace;
-      text-shadow: none;
-    }
-    button {
-      background-color: var(--text-color);
-      color: var(--bg-color);
-      border: none;
-      padding: 10px 25px;
-      margin-top: 10px;
-      cursor: pointer;
-      font-weight: bold;
-      font-family: 'Press Start 2P', monospace;
-      text-shadow: none;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #ff4d4d;
-    }
-    #countdown {
-      font-size: 1.5rem;
-      margin-top: 15px;
-      letter-spacing: 0.15em;
-    }
-    /* Audio widget style */
-    .audio-widget {
-      padding: 10px;
-      font-family: monospace;
-      color: var(--text-color);
-      text-shadow: 0 0 5px var(--glow-color);
-    }
-    .audio-widget audio {
-      width: 100%;
-      border-radius: 4px;
-    }
-    /* Spotify smaller embed */
-    .spotify-small {
-      height: 120px;
-      border-radius: 8px;
-      box-shadow:
-        0 0 8px var(--glow-color);
+    .moon-phase {
+      font-size: 4rem;
     }
   </style>
 </head>
 <body>
-  <div class="toggle-container">
-    Night Mode:
-    <input type="checkbox" id="modeToggle" checked />
-  </div>
-
   <h1>BRIDGE HUD</h1>
-
   <div class="container">
-
-    <!-- Marine Traffic large -->
-    <div class="widget marine-traffic">
-      <iframe
-        src="https://www.marinetraffic.com/en/ais/embed/zoom:10/centery:41.8781/centerx:-87.6298/showmenu:false/shownames:false/maptype:1"
-        allowfullscreen
-        loading="lazy"
-      ></iframe>
+    <div class="ais-section" id="ais-section">
+      <div class="ais-item">Loading AIS data…</div>
     </div>
-
-    <!-- Weather widgets side-by-side -->
-    <div class="horizontal-group">
-      <div class="widget">
-        <iframe
-          src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&detailLat=41.8781&detailLon=-87.6298&width=100%&height=100%&zoom=10"
-          allowfullscreen
-          loading="lazy"
-        ></iframe>
-      </div>
-      <div class="widget">
-        <iframe
-          src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&detailLat=41.8781&detailLon=-87.6298&width=100%&height=100%&zoom=7&radar=1"
-          allowfullscreen
-          loading="lazy"
-        ></iframe>
-      </div>
+    <div class="radar-section" id="radar-section">
+      <div class="radar-widget" id="radar-widget">Loading Radar…</div>
     </div>
-
-    <!-- Moon phase and Tide data side-by-side -->
-    <div class="moon-tide-group">
-      <div class="widget">
-        <h2 style="text-align:center; font-size:1rem; margin: 8px 0; letter-spacing: 0.15em;">
-          Moon Phase
-        </h2>
-        <iframe
-          class="moon-iframe"
-          src="https://dimden.dev/moon?custom=1&textColor=%23FF0000"
-          title="Moon Phase"
-          loading="lazy"
-        ></iframe>
+    <div class="bottom-row">
+      <div class="moon-section" id="moon-section">
+        <div class="moon-phase" id="moon-phase">🌑</div>
+        <div id="moon-info">Moon Phase: Loading…</div>
       </div>
-      <div class="widget">
-        <h2 style="text-align:center; font-size:1rem; margin: 8px 0; letter-spacing: 0.15em;">
-          Chicago Tide Data
-        </h2>
-        <!-- NOAA tide data embed from tidesandcurrents.noaa.gov -->
-        <iframe
-          class="moon-iframe"
-          src="https://tidesandcurrents.noaa.gov/embed.html?id=9087041&units=standard&timezone=GMT&clock=24hour&datatype=water_level"
-          title="Chicago Tide Data"
-          loading="lazy"
-        ></iframe>
-      </div>
-    </div>
-
-    <!-- Other widgets stacked -->
-    <div class="stacked-group">
-      <!-- Timer -->
-      <div class="widget">
-        <div class="timer-content">
-          <h2>TIMER</h2>
-          <label>Minutes: <input type="number" id="minutes" value="1" min="0" /></label>
-          <label>Seconds: <input type="number" id="seconds" value="0" min="0" /></label>
-          <br />
-          <button onclick="startTimer()">START</button>
-          <h3 id="countdown">00:00</h3>
-          <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
-        </div>
-      </div>
-
-      <!-- NOAA Weather Radio Audio -->
-      <div class="widget audio-widget">
-        <h2>NOAA Weather Radio KWO39 (Chicago)</h2>
-        <audio controls>
-          <source src="https://zeno.fm/stream/chicago-area-noaa-weather-radio-kwo39-162-55mhz.m3u8" type="audio/mpeg" />
-          Your browser does not support audio streaming.
-        </audio>
-      </div>
-
-      <!-- Spotify Player small -->
-      <div class="widget spotify-small">
-        <iframe
-          src="https://open.spotify.com/embed/playlist/37i9dQZF1DX4dyzvuaRJ0n?utm_source=generator"
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"
-          title="Spotify Playlist"
-          width="100%"
-          height="100%"
-        ></iframe>
+      <div class="weather-section" id="weather-section">
+        <div id="weather-info">Loading Weather…</div>
       </div>
     </div>
   </div>
 
   <script>
-    const toggle = document.getElementById('modeToggle');
-    toggle.addEventListener('change', () => {
-      if (toggle.checked) {
-        document.body.classList.remove('light');
-      } else {
-        document.body.classList.add('light');
+    // ========== Config ==========
+    const METEOSOURCE_API_KEY = 'YOUR_METEOSOURCE_API_KEY';
+    const LAT = 41.8781;
+    const LON = -87.6298;
+
+    // ========== AIS ==========
+
+    async function fetchAISReal() {
+      // Replace this with logic calling a real AIS API.
+      // For example, you might do:
+      // const url = `https://api.yourAISprovider.com/vessels?lat=${LAT}&lon=${LON}&radius=...&apikey=...`
+      // const resp = await fetch(url);
+      // return resp.json();
+      // For now return mock data:
+      return [
+        { name: "MV Chicago", lat: 41.82, lon: -87.57, status: "Underway" },
+        { name: "Tug Enterprise", lat: 41.70, lon: -87.59, status: "Moored" },
+        { name: "Cargo Vessel 3", lat: 41.65, lon: -87.55, status: "Anchored" }
+      ];
+    }
+
+    async function updateAIS() {
+      const container = document.getElementById('ais-section');
+      try {
+        const vessels = await fetchAISReal();
+        container.innerHTML = '';
+        vessels.forEach(v => {
+          const div = document.createElement('div');
+          div.className = 'ais-item';
+          div.textContent = `${v.name} — Lat: ${v.lat.toFixed(4)}, Lon: ${v.lon.toFixed(4)} — ${v.status}`;
+          container.appendChild(div);
+        });
+      } catch (e) {
+        container.innerHTML = '<div class="ais-item">Error loading AIS data.</div>';
       }
-    });
+    }
 
-    let timer;
-    function startTimer() {
-      clearInterval(timer);
-      const minutes = parseInt(document.getElementById('minutes').value) || 0;
-      const seconds = parseInt(document.getElementById('seconds').value) || 0;
-      let time = minutes * 60 + seconds;
-      const countdownEl = document.getElementById('countdown');
-      const alarm = document.getElementById('alarm-sound');
+    // ========== Weather & Moon via Meteosource ==========
 
-      timer = setInterval(() => {
-        if (time <= 0) {
-          clearInterval(timer);
-          countdownEl.textContent = "00:00";
-          alarm.play();
-          return;
+    async function fetchWeatherData() {
+      const url = `https://api.meteosource.com/v1/forecast?place_id=chicago&sections=current,astronomy&language=en&units=us&apikey=${METEOSOURCE_API_KEY}`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Weather fetch error');
+      return resp.json();
+    }
+
+    function moonFromAstronomy(astro) {
+      // Depending on API's astronomy section, parse moon phase.
+      // Meteosource returns something like moon_phase name / percent etc
+      if (!astro) return null;
+      return {
+        name: astro.moon_phase ?? 'Unknown',
+        illumination: astro.moon_illumination ?? null
+      };
+    }
+
+    async function updateWeatherAndMoon() {
+      const weatherSection = document.getElementById('weather-section');
+      const moonInfo = document.getElementById('moon-info');
+      const moonPhaseElem = document.getElementById('moon-phase');
+
+      try {
+        const data = await fetchWeatherData();
+        // Current weather
+        const cur = data.current;
+        weatherSection.innerHTML = `
+          <div><strong>Chicago</strong></div>
+          <div>Temp: ${cur.temperature}°F</div>
+          <div>Feels like: ${cur.feels_like}°F</div>
+          <div>Condition: ${cur.weather}</div>
+          <div>Humidity: ${cur.humidity}%</div>
+          <div>Wind: ${cur.wind_speed} mph</div>
+        `;
+        // Moon
+        const astro = data.astronomy;
+        const moon = moonFromAstronomy(astro);
+        if (moon) {
+          moonPhaseElem.textContent = astro.moon_phase_emoji || moon.name.charAt(0);
+          moonInfo.textContent = `Moon: ${moon.name}` + (moon.illumination != null ? ` (${(moon.illumination*100).toFixed(1)}%)` : '');
+        } else {
+          moonInfo.textContent = 'Moon data unavailable';
         }
+      } catch (e) {
+        weatherSection.innerHTML = 'Error loading weather.';
+        moonInfo.textContent = 'Error loading moon data.';
+        console.error(e);
+      }
+    }
 
-        let m = Math.floor(time / 60);
-        let s = time % 60;
-        countdownEl.textContent =
-```
+    // ========== Radar ==========
+
+    async function updateRadar() {
+      const radarWidget = document.getElementById('radar-widget');
+      // You need a URL to radar imagery. Possible source: NOAA / NWS local radar image tile or large PNG.
+      // Example placeholder:
+      const radarImageUrl = 'https://via.placeholder.com/800x300.png?text=Radar+Image';
+      const img = new Image();
+      img.src = radarImageUrl;
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '100%';
+      img.onload = () => {
+        radarWidget.innerHTML = '';
+        radarWidget.appendChild(img);
+      };
+      img.onerror = () => {
+        radarWidget.textContent = 'Radar image error';
+      };
+    }
+
+    // ========== Moon fallback algorithm (if API doesn’t provide) ==========
+
+    function getMoonPhaseLocal(date) {
+      const lp = 2551443;
+      const newMoon = new Date('2001-01-01T00:00:00Z').getTime()/1000;
+      const now = date.getTime()/1000;
+      const phase = ((now - newMoon) % lp) / lp;
+      const index = Math.floor(phase * 8 + 0.5) % 8;
+      const phases = ['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous','Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'];
+      const emojis = ['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'];
+      return { phase: phases[index], emoji: emojis[index] };
+    }
+
+    function updateMoonLocal() {
+      const moonPhaseElem = document.getElementById('moon-phase');
+      const moonInfo = document.getElementById('moon-info');
+      const m = getMoonPhaseLocal(new Date());
+      moonPhaseElem.textContent = m.emoji;
+      moonInfo.textContent = `Moon Phase: ${m.phase}`;
+    }
+
+    // ========== Initialize & Intervals ==========
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateAIS();
+      updateWeatherAndMoon();
+      updateRadar();
+      
+      // refresh
+      setInterval(updateAIS, 60000);          // every minute
+      setInterval(updateWeatherAndMoon, 300000);  // every 5 min
+      setInterval(updateRadar, 300000);         // every 5 min
+      // If using fallback moon local:
+      // setInterval(updateMoonLocal, 86400000);
+    });
+  </script>
+</body>
+</html>
