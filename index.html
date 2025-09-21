@@ -1,161 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BRIDGE HUD</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-    :root {
-      --bg-color: #000000;
-      --text-color: #FF1A1A;
-      --widget-bg: #111;
-      --widget-border: #FF1A1A;
-      --glow-color: #FF0000;
-    }
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      font-family: 'Press Start 2P', monospace;
-    }
-    h1 {
-      display: block;
-      text-align: center;
-      font-size: 3rem; /* larger */
-      margin: 20px 0;
-      letter-spacing: 0.15em;
-      color: var(--text-color);
-      /* reduced glow */
-      text-shadow: 0 0 4px var(--glow-color), 0 0 6px var(--glow-color);
-      animation: boot 3s steps(30, end) forwards, glitch 3s 3.2s infinite;
-      white-space: nowrap;
-      overflow: hidden;
-      border-right: 2px solid var(--text-color);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BRIDGE HUD</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-    @keyframes boot {
-      from { width: 0; }
-      to { width: 12ch; }
-    }
+  :root {
+    --bg-color: #000;
+    --grid-color: rgba(255, 255, 255, 0.02);
+    --text-color: #FF1A1A;
+    --widget-border: #FF1A1A;
+    --glow-color: #FF0000;
+  }
 
-    @keyframes glitch {
-      0% { text-shadow: 0 0 4px var(--glow-color), 0 0 6px var(--glow-color); transform: none; }
-      20% { text-shadow: 2px 0 var(--glow-color), -2px 0 #ff4d4d; transform: skewX(3deg); }
-      40% { text-shadow: -2px 0 var(--glow-color), 2px 0 #ff4d4d; transform: skewX(-3deg); }
-      60% { text-shadow: 0 0 4px var(--glow-color), 0 0 6px var(--glow-color); transform: none; }
-      80% { text-shadow: 1px 0 var(--glow-color), -1px 0 #ff4d4d; transform: skewX(2deg); }
-      100% { text-shadow: 0 0 4px var(--glow-color), 0 0 6px var(--glow-color); transform: none; }
-    }
+  body {
+    margin: 0;
+    background-color: var(--bg-color);
+    font-family: 'Press Start 2P', monospace;
+    color: var(--text-color);
+    position: relative;
+  }
 
-    .container {
-      width: 90vw;
-      max-width: 1200px;
-      margin: 0 auto 40px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      align-items: center;
-    }
-    .widget {
-      background-color: var(--widget-bg);
-      border: 2px solid var(--widget-border);
-      border-radius: 8px;
-      box-shadow: 0 0 10px var(--glow-color);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      aspect-ratio: 1 / 1; /* square shape */
-      width: 90%; /* default width */
-      max-width: 500px; /* keep square on desktop */
-    }
-    iframe {
-      border: none;
-      width: 100%;
-      height: 100%;
-      flex-grow: 1;
-    }
-    .refresh-btn {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      background: var(--text-color);
-      color: var(--bg-color);
-      border: none;
-      font-size: 0.6rem;
-      padding: 4px 8px;
-      cursor: pointer;
-      font-family: 'Press Start 2P', monospace;
-    }
-    .refresh-btn:hover { background: #ff4d4d; }
+  /* scanline grid background */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(to right, var(--grid-color) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-    /* group wrappers */
-    .moon-weather-group {
-      display: flex;
-      gap: 20px;
-      width: 100%;
-      justify-content: center;
-    }
-    .moon-weather-group .widget {
-      flex: 1;
-    }
-    @media (max-width: 768px) {
-      .moon-weather-group {
-        flex-direction: column;
-        align-items: center;
-      }
-    }
-  </style>
+  h1 {
+    text-align: center;
+    font-size: 3rem;
+    margin: 20px 0;
+    letter-spacing: 0.15em;
+    color: var(--text-color);
+    text-shadow: 0 0 2px var(--glow-color);
+    z-index: 1;
+    position: relative;
+    animation: glitch 2s infinite;
+  }
+
+  @keyframes glitch {
+    0% { text-shadow: 0 0 2px var(--glow-color); transform: translate(0,0);}
+    20% { text-shadow: -1px 0 var(--glow-color), 1px 0 var(--glow-color); transform: translate(0.5px,-0.5px);}
+    40% { text-shadow: 1px 0 var(--glow-color); transform: translate(-0.5px,0.5px);}
+    60% { text-shadow: 0 0 2px var(--glow-color); transform: translate(0,0);}
+    80% { text-shadow: 0 0 4px var(--glow-color); }
+    100% { text-shadow: 0 0 2px var(--glow-color); transform: translate(0,0);}
+  }
+
+  .mode-btn {
+    display: block;
+    margin: 0 auto 20px;
+    background: var(--text-color);
+    color: var(--bg-color);
+    border: none;
+    padding: 10px 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: 'Press Start 2P', monospace;
+    z-index: 1;
+    position: relative;
+  }
+
+  .container {
+    width: 95vw;
+    max-width: 1200px;
+    margin: 0 auto 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    z-index: 1;
+    position: relative;
+  }
+
+  .widget {
+    background-color: rgba(0,0,0,0.8);
+    border: 2px solid var(--widget-border);
+    border-radius: 8px;
+    box-shadow: 0 0 5px var(--glow-color);
+    position: relative;
+    aspect-ratio: 1/1; /* square shape */
+    display: flex;
+    flex-direction: column;
+  }
+
+  iframe {
+    border: none;
+    width: 100%;
+    height: 100%;
+    flex-grow: 1;
+  }
+
+  .refresh-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: var(--text-color);
+    color: var(--bg-color);
+    border: none;
+    font-size: 0.5rem;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', monospace;
+    z-index: 2;
+  }
+
+  .refresh-btn:hover { background: #ff4d4d; }
+</style>
 </head>
 <body>
   <h1>BRIDGE HUD</h1>
+  <button class="mode-btn" onclick="toggleMode()">DAY / NIGHT</button>
 
   <div class="container">
-    <!-- AIS Marine Traffic -->
     <div class="widget">
       <button class="refresh-btn" onclick="reloadFrame('ais')">REFRESH</button>
       <iframe id="ais" 
         src="https://www.marinetraffic.com/en/ais/embed/zoom:10/centery:41.8781/centerx:-87.6298/showmenu:false/shownames:false/maptype:1"
-        allowfullscreen loading="lazy">
-      </iframe>
+        allowfullscreen loading="lazy"></iframe>
     </div>
 
-    <!-- Weather Radar -->
     <div class="widget">
       <button class="refresh-btn" onclick="reloadFrame('radar')">REFRESH</button>
       <iframe id="radar"
         src="https://embed.windy.com/embed2.html?lat=41.8781&lon=-87.6298&zoom=8&radar=1&level=surface"
-        allowfullscreen loading="lazy">
-      </iframe>
+        allowfullscreen loading="lazy"></iframe>
     </div>
 
-    <!-- Moon Phase (left) + Current Weather Widget (right) -->
-    <div class="moon-weather-group">
-      <div class="widget">
-        <button class="refresh-btn" onclick="reloadFrame('moon')">REFRESH</button>
-        <iframe id="moon"
-          src="https://dimden.dev/moon?custom=1&textColor=%23FF0000"
-          title="Moon Phase" loading="lazy">
-        </iframe>
-      </div>
-      <div class="widget">
-        <button class="refresh-btn" onclick="reloadFrame('wx')">REFRESH</button>
-        <!-- working weather widget from weatherwidget.io -->
-        <iframe id="wx"
-          src="https://weatherwidget.io/w/?lat=41.8781&lon=-87.6298&unit=us"
-          title="Chicago Weather" loading="lazy">
-        </iframe>
-      </div>
+    <div class="widget">
+      <button class="refresh-btn" onclick="reloadFrame('moon')">REFRESH</button>
+      <iframe id="moon"
+        src="https://dimden.dev/moon?custom=1&textColor=%23FF0000"
+        title="Moon Phase" loading="lazy"></iframe>
+    </div>
+
+    <div class="widget">
+      <button class="refresh-btn" onclick="reloadFrame('wx')">REFRESH</button>
+      <!-- working current weather widget -->
+      <iframe id="wx"
+        src="https://forecast7.com/en/41d88n87d63/chicago/?unit=us&apikey=free"
+        title="Chicago Weather" loading="lazy"></iframe>
     </div>
   </div>
 
-  <script>
-    function reloadFrame(id) {
-      const frame = document.getElementById(id);
-      frame.src = frame.src; // reload iframe
+<script>
+  function reloadFrame(id) {
+    const frame = document.getElementById(id);
+    frame.src = frame.src;
+  }
+
+  function toggleMode() {
+    const root = document.documentElement;
+    if (getComputedStyle(root).getPropertyValue('--text-color').trim() === '#FF1A1A') {
+      // switch to green day mode
+      root.style.setProperty('--text-color', '#00FF00');
+      root.style.setProperty('--widget-border', '#00FF00');
+      root.style.setProperty('--glow-color', '#00FF00');
+    } else {
+      // switch to red night mode
+      root.style.setProperty('--text-color', '#FF1A1A');
+      root.style.setProperty('--widget-border', '#FF1A1A');
+      root.style.setProperty('--glow-color', '#FF0000');
     }
-  </script>
+  }
+</script>
 </body>
 </html>
